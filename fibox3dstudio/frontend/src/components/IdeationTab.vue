@@ -28,6 +28,6 @@ const glbList = inject('glbList')
     <ContentArea class="flex-1" />
     
     <!-- Right Panel: Copilot -->
-    <ChatPanel class="w-96 border-l border-gray-700" />
+    <ChatPanel class="w-80 border-l border-gray-700" />
   </div>
 </template>

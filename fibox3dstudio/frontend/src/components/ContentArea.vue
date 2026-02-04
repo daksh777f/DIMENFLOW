@@ -686,156 +686,170 @@ watch([structuredPrompt, currentImage], () => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col bg-gray-900">
+  <div class="h-full flex flex-col relative overflow-hidden">
     <!-- Template/Upload Selection -->
-    <div v-if="showTemplateSelect && !structuredPrompt && !currentImage && !pendingImage && !isGenerating" class="flex-1 flex items-center justify-center p-8">
-      <div class="max-w-2xl w-full">
-        <h2 class="text-xl font-semibold mb-6 text-center">Start Your Design</h2>
+    <div v-if="showTemplateSelect && !structuredPrompt && !currentImage && !pendingImage && !isGenerating" class="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
+      <div class="max-w-4xl w-full">
+        <h2 class="text-3xl font-light mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 tracking-wide">START YOUR DESIGN</h2>
+        <p class="text-gray-400 text-center mb-10 font-light tracking-wider">Select a template or upload your inspiration</p>
         
-        <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
           <div 
             v-for="template in templates" 
             :key="template.id"
             @click="handleTemplateSelect(template)"
-            class="aspect-video bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 border-2 border-transparent hover:border-blue-500 flex items-center justify-center"
+            class="spotlight-card aspect-square rounded-xl cursor-pointer hover:shadow-2xl hover:shadow-indigo-500/10 group flex flex-col items-center justify-center gap-4 transition-all duration-300"
           >
-            <div class="text-center">
-              <div class="text-4xl mb-2">{{ template.icon }}</div>
-              <div class="text-sm">{{ template.name }}</div>
-            </div>
+            <div class="text-5xl group-hover:scale-110 transition-transform duration-300 filter drop-shadow-lg">{{ template.icon }}</div>
+            <div class="text-xs uppercase tracking-widest font-semibold text-gray-400 group-hover:text-indigo-300 transition-colors">{{ template.name }}</div>
           </div>
         </div>
 
         <div class="text-center">
-          <div class="text-sm text-gray-400 mb-3">Or upload your own</div>
+          <div class="text-xs text-gray-500 mb-4 uppercase tracking-widest">OR Custom Upload</div>
           <input type="file" @change="handleFileUpload" accept="image/*" class="hidden" ref="fileInput" />
           <button 
             @click="$refs.fileInput.click()"
-            class="px-6 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 rounded"
+            class="relative px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg text-sm font-bold uppercase tracking-wider shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden group"
           >
-            Upload Inspiration
+            <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            <span class="relative flex items-center gap-2">
+              <span class="material-symbols-outlined text-lg">upload_file</span>
+              Upload Inspiration
+            </span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- Main Content Area -->
-    <div v-else class="flex-1 min-h-0 flex flex-col">
-      <!-- Toolbar -->
-      <div class="px-4 py-2 bg-gray-800 border-b border-gray-700 flex items-center justify-between">
-        <div class="flex items-center gap-2">
+    <div v-else class="flex-1 min-h-0 flex flex-col relative z-10">
+      <!-- Toolbar (Floating Glass) -->
+      <div class="px-6 py-4 flex items-center justify-between absolute top-0 left-0 right-0 z-20 pointer-events-none">
+        <div class="bg-gray-800 border border-gray-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-lg pointer-events-auto">
           <button 
             @click="resetScene"
-            class="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded flex items-center gap-1"
+            class="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors flex items-center gap-2"
           >
-            <span class="material-symbols-outlined" style="font-size: 16px;">add_box</span>
-            New Project
+            <span class="material-symbols-outlined text-base">add_circle</span>
+            New
           </button>
+          <div class="w-px h-4 bg-gray-700 mx-1"></div>
           <button 
             v-if="currentImage && structuredPrompt"
             @click="detectBoundingBoxes"
             :disabled="isDetectingBoxes"
-            class="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center gap-1"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-2"
+            :class="isDetectingBoxes ? 'text-gray-500' : 'text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10'"
           >
-            <span class="material-symbols-outlined" style="font-size: 14px;">{{  isDetectingBoxes ? 'progress_activity' : 'select_all' }}</span>
-            {{ isDetectingBoxes ? 'Detecting...' : 'Detect Objects' }}
+            <span class="material-symbols-outlined text-base" :class="{'animate-spin': isDetectingBoxes}">
+              {{ isDetectingBoxes ? 'progress_activity' : 'select_all' }}
+            </span>
+            {{ isDetectingBoxes ? 'Scanning...' : 'Detect Objects' }}
           </button>
           <button 
             v-if="boundingBoxes.length > 0"
             @click="clearBoundingBoxes"
-            class="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded flex items-center gap-1"
+            class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors flex items-center gap-2"
           >
-            <span class="material-symbols-outlined" style="font-size: 14px;">clear</span>
-            Clear Boxes
+            <span class="material-symbols-outlined text-base">close</span>
+            Clear
           </button>
+          <div class="w-px h-4 bg-gray-700 mx-1"></div>
           <button 
             v-if="currentImage && structuredPrompt"
             @click="toggleJsonEditor"
-            class="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded flex items-center gap-1"
-            :class="{ 'bg-blue-800': showJsonEditor }"
+            class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-2"
+            :class="showJsonEditor ? 'text-blue-300 bg-blue-500/20' : 'text-gray-300 hover:text-blue-300 hover:bg-blue-500/10'"
           >
-            <span class="material-symbols-outlined" style="font-size: 14px;">code</span>
-            {{ showJsonEditor ? 'Hide JSON' : 'Show JSON' }}
+            <span class="material-symbols-outlined text-base">data_object</span>
+            JSON
           </button>
         </div>
-        <div v-if="currentSeed" class="text-xs text-gray-400">
-          Seed: {{ currentSeed }}
+        
+        <div v-if="currentSeed" class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-mono text-indigo-300 flex items-center gap-2 shadow-lg">
+          <span class="text-gray-500">SEED</span>
+          {{ currentSeed }}
         </div>
       </div>
 
       <!-- Image Display -->
-      <div class="flex-1 min-h-0 flex items-center justify-center p-4 bg-gray-900 overflow-hidden" style="min-height: 200px;">
-        <div v-if="isGenerating" class="text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <div class="text-sm text-gray-400">Generating scene...</div>
+      <div class="flex-1 min-h-0 flex items-center justify-center p-4 overflow-hidden relative" style="min-height: 200px;">
+        <div v-if="isGenerating" class="text-center absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900/80 backdrop-blur-sm">
+          <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-t-2 border-indigo-500 rounded-full animate-spin"></div>
+            <div class="absolute inset-2 border-r-2 border-purple-500 rounded-full animate-spin reverse-spin"></div>
+            <div class="absolute inset-4 border-b-2 border-pink-500 rounded-full animate-spin"></div>
+          </div>
+          <div class="text-sm font-light tracking-widest text-indigo-300 animate-pulse">GENERATING REALITY...</div>
         </div>
 
-        <div v-else-if="pendingImage" class="w-full h-full flex flex-col min-h-0">
+        <div v-else-if="pendingImage" class="w-full h-full flex flex-col min-h-0 relative z-10">
           <!-- Before/After Toggle -->
-          <div class="flex justify-center mb-3 flex-shrink-0">
-            <div class="inline-flex bg-gray-800 rounded p-1">
-              <button 
-                @click="showBefore = false"
-                :class="[
-                  'px-4 py-1 text-xs font-semibold rounded transition-colors',
-                  !showBefore ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                ]"
-              >
-                After
-              </button>
-              <button 
-                @click="showBefore = true"
-                :class="[
-                  'px-4 py-1 text-xs font-semibold rounded transition-colors',
-                  showBefore ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                ]"
-              >
-                Before
-              </button>
-            </div>
+          <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 glass p-1 rounded-full flex shadow-xl">
+            <button 
+              @click="showBefore = true"
+              :class="[
+                'px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300',
+                showBefore ? 'bg-gray-700 text-white shadow-inner' : 'text-gray-400 hover:text-gray-200'
+              ]"
+            >
+              Before
+            </button>
+            <button 
+              @click="showBefore = false"
+              :class="[
+                'px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full transition-all duration-300',
+                !showBefore ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+              ]"
+            >
+              After
+            </button>
           </div>
           
           <!-- Image Container -->
-          <div class="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <div class="flex-1 min-h-0 flex items-center justify-center overflow-hidden pt-12">
             <Transition name="fade" mode="out-in">
               <img 
                 v-if="!showBefore"
-                :key="'after'"
+                key="after"
                 :src="pendingImage" 
-                class="max-w-full max-h-full object-contain rounded" 
+                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl ring-1 ring-white/10" 
               />
               <img 
                 v-else
-                :key="'before'"
+                key="before"
                 :src="currentImage" 
-                class="max-w-full max-h-full object-contain rounded" 
+                class="max-w-full max-h-full object-contain rounded-lg shadow-2xl opacity-60 grayscale-[0.5]" 
               />
             </Transition>
           </div>
           
-          <!-- Accept/Reject Buttons -->
-          <div class="flex justify-center gap-3 mt-3 flex-shrink-0">
+          <!-- Accept/Reject Floating Action -->
+          <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-4">
             <button 
               @click="handleAcceptPending"
-              class="px-6 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 rounded shadow-lg"
+              class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-full shadow-lg hover:shadow-emerald-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1"
             >
-              Accept
+              <span class="material-symbols-outlined text-lg">check_circle</span>
+              Accept Changes
             </button>
             <button 
               @click="rejectPending"
-              class="px-6 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 rounded shadow-lg"
+              class="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-200 hover:text-white rounded-full shadow-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all hover:-translate-y-1"
             >
-              Reject
+              <span class="material-symbols-outlined text-lg">cancel</span>
+              Discard
             </button>
           </div>
         </div>
 
-        <div v-else-if="currentImage" class="w-full h-full min-h-0 flex items-center justify-center">
-          <div ref="imageContainer" class="relative" style="max-width: 100%; max-height: 100%;">
+        <div v-else-if="currentImage" class="w-full h-full min-h-0 flex items-center justify-center pt-14 pb-4">
+          <div ref="imageContainer" class="relative group" style="max-width: 100%; max-height: 100%;">
             <img 
               :src="currentImage" 
-              class="block w-auto h-auto max-w-full max-h-full object-contain rounded"
-              style="max-height: calc(100vh - 160px);"
+              class="block w-auto h-auto max-w-full max-h-full object-contain rounded-lg shadow-2xl ring-1 ring-white/10"
+              style="max-height: calc(100vh - 180px);"
               @load="() => { if (boundingBoxes.length > 0) detectBoundingBoxes() }"
             />
             
@@ -843,7 +857,7 @@ watch([structuredPrompt, currentImage], () => {
             <div 
               v-for="box in boundingBoxes" 
               :key="box.id"
-              class="bounding-box"
+              class="bounding-box backdrop-blur-[1px]"
               :class="{ 'is-hovered': hoveredBox?.id === box.id }"
               :style="{
                 position: 'absolute',
@@ -856,34 +870,35 @@ watch([structuredPrompt, currentImage], () => {
               @mouseenter="handleBoxEnter(box)"
               @mouseleave="handleBoxLeave"
             >
+              <div v-if="hoveredBox?.id === box.id" class="absolute inset-0 bg-blue-500/10 border-2 border-blue-400/50 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
             </div>
             
-            <!-- Single Hover Popup (outside bounding boxes) -->
+            <!-- Popup (Glass Style) -->
             <Transition name="popup">
               <div 
                 v-if="hoveredBox && !editingBox"
-                class="bbox-popup"
+                class="glass bbox-popup !bg-gray-900/90 !backdrop-blur-xl !border-blue-500/30"
                 :class="{ 'popup-above': hoverPopupPosition.showAbove, 'popup-below': !hoverPopupPosition.showAbove }"
                 :style="hoverPopupStyle"
                 @mouseenter="handlePopupEnter"
                 @mouseleave="handlePopupLeave"
                 @click.stop
               >
-                <div class="popup-content">
-                  <p class="popup-description">{{ hoveredBox.description }}</p>
-                  <div class="popup-actions">
+                <div class="p-3">
+                  <p class="text-xs text-blue-100/90 leading-relaxed mb-3 line-clamp-4 font-light">{{ hoveredBox.description }}</p>
+                  <div class="flex gap-2">
                     <button 
                       @click="startEditBox(hoveredBox, $event)"
-                      class="action-btn action-edit"
+                      class="flex-1 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-500/20 transition-colors flex items-center justify-center gap-1"
                     >
-                      <span class="material-symbols-outlined">edit</span>
+                      <span class="material-symbols-outlined text-sm">edit</span>
                       Edit
                     </button>
                     <button 
                       @click="removeBox(hoveredBox, $event)"
-                      class="action-btn action-remove"
+                      class="flex-1 py-1.5 bg-red-600/10 hover:bg-red-600/30 text-red-300 text-[10px] font-bold uppercase tracking-wider rounded border border-red-500/10 transition-colors flex items-center justify-center gap-1"
                     >
-                      <span class="material-symbols-outlined">delete</span>
+                      <span class="material-symbols-outlined text-sm">delete</span>
                       Remove
                     </button>
                   </div>
@@ -891,36 +906,36 @@ watch([structuredPrompt, currentImage], () => {
               </div>
             </Transition>
             
-            <!-- Single Edit Popup (outside bounding boxes) -->
+            <!-- Edit Popup -->
             <Transition name="popup">
               <div 
                 v-if="editingBox"
-                class="bbox-popup edit-popup"
-                :class="{ 'popup-above': editPopupPosition.showAbove, 'popup-below': !editPopupPosition.showAbove }"
+                class="glass bbox-popup edit-popup !bg-gray-900/95 !backdrop-blur-xl !border-indigo-500/40"
+                 :class="{ 'popup-above': editPopupPosition.showAbove, 'popup-below': !editPopupPosition.showAbove }"
                 :style="editPopupStyle"
                 @click.stop
               >
-                <div class="popup-content">
-                  <p class="popup-description edit-title">{{ editingBox.description }}</p>
+                <div class="p-4">
+                  <p class="text-xs font-bold text-indigo-300 mb-2 truncate">{{ editingBox.description }}</p>
                   <textarea 
                     v-model="editInstruction"
                     placeholder="Describe how to modify this object..."
-                    class="edit-textarea"
+                    class="w-full bg-black/40 border border-white/10 rounded p-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all mb-3 resize-none"
                     rows="3"
                     @click.stop
                     autofocus
                   ></textarea>
-                  <div class="popup-actions">
+                  <div class="flex gap-2">
                     <button 
                       @click="confirmEditBox($event)"
                       :disabled="!editInstruction.trim()"
-                      class="action-btn action-confirm"
+                      class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wider rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Confirm
                     </button>
                     <button 
                       @click="cancelEditBox($event)"
-                      class="action-btn action-cancel"
+                      class="flex-1 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-bold uppercase tracking-wider rounded transition-colors"
                     >
                       Cancel
                     </button>
@@ -931,84 +946,81 @@ watch([structuredPrompt, currentImage], () => {
           </div>
         </div>
 
-        <div v-else class="text-gray-500 text-sm">
-          No image yet
+        <div v-else class="text-gray-500 font-light tracking-wide text-sm flex flex-col items-center gap-2">
+          <span class="material-symbols-outlined text-4xl opacity-20">image</span>
+          No image loaded
         </div>
       </div>
       
-      <!-- Bottom Panel: JSON Diff (when pending) OR JSON Editor (when toggled) -->
-      <Transition name="slide-down" mode="out-in">
-        <div v-if="pendingPrompt" key="diff" class="border-t border-gray-700 bg-gray-800 p-4 flex-shrink-0" style="max-height: 280px;">
-          <div class="h-full flex flex-col">
-            <h3 class="text-sm font-semibold mb-2 text-gray-300 flex-shrink-0">Structured Prompt Changes</h3>
-            <pre 
-              class="flex-1 text-xs text-gray-300 overflow-auto font-mono diff-output leading-relaxed whitespace-pre-wrap bg-gray-900 rounded p-3 min-h-0"
-              v-html="generatePromptDiff()"
-            ></pre>
-          </div>
-        </div>
-        <div v-else-if="showJsonEditor && structuredPrompt" key="editor" class="border-t border-gray-700 bg-gray-800 p-4 flex-shrink-0" style="max-height: 350px;">
-          <div class="h-full flex flex-col">
-            <div class="flex items-center justify-between mb-3 flex-shrink-0">
-              <h3 class="text-sm font-semibold text-gray-300">Structured Prompt JSON</h3>
-              <button 
-                @click="showJsonEditor = false"
-                class="text-xs text-gray-400 hover:text-gray-200"
-              >
-                <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
-              </button>
-            </div>
+      <!-- Bottom Panel: JSON Diff OR Editor -->
+      <Transition name="slide-up">
+        <div v-if="pendingPrompt || (showJsonEditor && structuredPrompt)" class="absolute bottom-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col" :style="{ height: pendingPrompt ? '280px' : '350px' }">
             
-            <div 
-              ref="jsonEditorContainer" 
-              class="bg-white rounded flex-1 min-h-0"
-            ></div>
-            
-            <div v-if="jsonEditorError" class="mt-2 text-xs text-red-400 flex-shrink-0">
-              {{ jsonEditorError }}
+            <!-- Pending Diff -->
+             <div v-if="pendingPrompt" class="h-full flex flex-col p-4">
+              <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-3 flex-shrink-0">Prompt Modifications</h3>
+              <pre 
+                class="flex-1 text-xs text-gray-300 overflow-auto font-mono diff-output leading-relaxed whitespace-pre-wrap bg-black/30 rounded-lg p-4 min-h-0 border border-white/5"
+                v-html="generatePromptDiff()"
+              ></pre>
             </div>
-            
-            <div class="flex gap-2 mt-3 flex-shrink-0">
-              <button 
-                @click="generateFromJson"
-                :disabled="isGenerating"
-                class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 rounded text-sm font-semibold flex items-center justify-center gap-2"
-              >
-                <span v-if="!isGenerating" class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
-                <div v-else class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                {{ isGenerating ? 'Generating...' : 'Generate' }}
-              </button>
-              <button 
-                @click="resetJsonEditor"
-                class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-sm font-semibold flex items-center justify-center gap-2"
-              >
-                <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
-                Reset
-              </button>
+
+            <!-- JSON Editor -->
+            <div v-else class="h-full flex flex-col p-4">
+               <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                <h3 class="text-xs font-bold text-blue-300 uppercase tracking-widest">Structured Prompt JSON</h3>
+                <button @click="showJsonEditor = false" class="text-gray-500 hover:text-white transition-colors">
+                  <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+              
+              <div ref="jsonEditorContainer" class="rounded-lg overflow-hidden flex-1 min-h-0 border border-white/10 shadow-inner"></div>
+              
+              <div v-if="jsonEditorError" class="mt-2 text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
+                {{ jsonEditorError }}
+              </div>
+              
+              <div class="flex gap-3 mt-3 flex-shrink-0">
+                <button 
+                  @click="generateFromJson"
+                  :disabled="isGenerating"
+                  class="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-indigo-500/25"
+                >
+                  <span v-if="!isGenerating" class="material-symbols-outlined text-sm">auto_awesome</span>
+                  <div v-else class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                  {{ isGenerating ? 'Process Changes' : 'Generate Changes' }}
+                </button>
+                <button 
+                  @click="resetJsonEditor"
+                  class="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-sm">restart_alt</span>
+                  Reset
+                </button>
+              </div>
             </div>
-          </div>
         </div>
       </Transition>
     </div>
 
-    <!-- Tutorial Video Dialog -->
+    <!-- Tutorial Video Dialog (Glass) -->
     <Transition name="fade">
       <div 
         v-if="showTutorialDialog" 
-        class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[1000] p-4"
+        class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
         @click.self="closeTutorial"
       >
-        <div class="relative w-full max-w-4xl">
+        <div class="relative w-full max-w-4xl glass p-1 rounded-xl shadow-2xl shadow-indigo-500/20">
           <button 
             @click="closeTutorial"
-            class="absolute -top-12 right-0 p-2 bg-gray-700 hover:bg-gray-600 rounded-full"
+            class="absolute -top-12 right-0 p-2 text-gray-400 hover:text-white transition-colors"
           >
-            <span class="material-symbols-outlined" style="font-size: 24px;">close</span>
+            <span class="material-symbols-outlined text-3xl">close</span>
           </button>
-          <div class="relative" style="padding-bottom: 56.25%;">
+          <div class="relative rounded-lg overflow-hidden" style="padding-bottom: 56.25%;">
             <iframe 
               :src="tutorialVideoUrl"
-              class="absolute inset-0 w-full h-full rounded-lg"
+              class="absolute inset-0 w-full h-full"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen

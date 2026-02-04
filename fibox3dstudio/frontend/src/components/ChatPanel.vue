@@ -349,15 +349,18 @@ onMounted(() => {
 <template>
   <div class="h-full flex flex-col bg-gray-800">
     <!-- Header -->
-    <div class="p-3 border-b border-gray-700 flex items-center justify-between">
-      <h2 class="text-sm font-semibold">Copilot</h2>
+    <div class="p-4 border-b border-white/10 flex items-center justify-between">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">smart_toy</span>
+        Copilot
+      </h2>
       <button 
         @click="openJsonEditor"
         :disabled="!structuredPrompt"
-        class="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 rounded flex items-center gap-1"
+        class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded transition-all flex items-center gap-1"
         title="Edit structured prompt JSON"
       >
-        <span class="material-symbols-outlined" style="font-size: 16px;">code</span>
+        <span class="material-symbols-outlined" style="font-size: 14px;">code</span>
         JSON
       </button>
     </div>
@@ -365,70 +368,70 @@ onMounted(() => {
     <!-- Activity History -->
     <div class="flex-1 overflow-y-auto p-3 space-y-3">
       <div v-if="displayedHistory.length === 0" class="text-gray-500 text-xs text-center py-8">
-        Generate a scene to start tracking activity
+        No conversation history
       </div>
 
       <div 
         v-for="(activity, idx) in displayedHistory" 
         :key="activity.id"
         :class="[
-          'border rounded-lg p-3 transition-all relative',
-          getActivityColor(activity.type),
-          activity.isLoading ? 'opacity-70' : ''
+          'rounded-lg p-3 transition-colors text-left relative',
+          activity.isLoading ? 'bg-blue-900/20 border border-blue-500/30' : 'bg-gray-700 hover:bg-gray-600 border border-transparent'
         ]"
       >
         <!-- Loading Overlay -->
-        <div v-if="activity.isLoading" class="absolute top-2 right-2">
+        <div v-if="activity.isLoading" class="absolute top-3 right-3">
           <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
         </div>
         
         <!-- Image and Content Side by Side -->
         <div class="flex gap-3 mb-3">
           <!-- Image -->
-          <div v-if="activity.imageUrl" class="flex-shrink-0">
+          <div v-if="activity.imageUrl" class="flex-shrink-0 group relative overflow-hidden rounded-lg w-20 h-20 bg-black/20">
             <img 
               :src="activity.imageUrl" 
               alt="Activity preview"
-              class="w-28 h-28 object-cover rounded cursor-pointer hover:opacity-80"
+              class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-500"
               @click="showPreview(activity)"
             >
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none"></div>
           </div>
           
           <!-- Icon, Type, Time, and Description -->
-          <div class="flex-1 min-w-0 flex flex-col">
+          <div class="flex-1 min-w-0 flex flex-col justify-center">
             <div class="flex items-center gap-2 mb-1">
-              <span class="material-symbols-outlined" style="font-size: 20px;">{{ getActivityIcon(activity.type) }}</span>
-              <div class="font-semibold text-sm">{{ getActivityType(activity.type) }}</div>
+              <span class="material-symbols-outlined text-indigo-300" style="font-size: 18px;">{{ getActivityIcon(activity.type) }}</span>
+              <div class="font-bold text-xs uppercase tracking-wide text-gray-300">{{ getActivityType(activity.type) }}</div>
+              <div class="text-gray-500 text-[10px] ml-auto">{{ formatTime(activity.timestamp) }}</div>
             </div>
-            <div class="text-gray-400 text-xs mb-2">{{ formatTime(activity.timestamp) }}</div>
-            <p class="text-xs text-gray-300 leading-relaxed flex-1">{{ getActivityDescription(activity.description) }}</p>
+            <p class="text-xs text-gray-400 leading-relaxed line-clamp-2 font-light">{{ getActivityDescription(activity.description) }}</p>
           </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-2">
+        <div class="flex gap-2 opacity-60 hover:opacity-100 transition-opacity">
           <button 
             @click="showPreview(activity)"
-            class="flex-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs flex items-center justify-center gap-1"
+            class="flex-1 px-2 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-1 transition-all"
           >
-            <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span>
-            Preview
+            <span class="material-symbols-outlined" style="font-size: 14px;">visibility</span>
+            View
           </button>
           <button 
             @click="restoreToPoint(idx)"
             :disabled="idx === currentHistoryIndex"
-            class="flex-1 px-3 py-1.5 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 rounded text-xs flex items-center justify-center gap-1"
+            class="flex-1 px-2 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-1 transition-all disabled:opacity-30 disabled:border-transparent"
           >
-            <span class="material-symbols-outlined" style="font-size: 16px;">restore</span>
+            <span class="material-symbols-outlined" style="font-size: 14px;">restore</span>
             Restore
           </button>
           <button 
             @click="createVariationFromActivity(idx)"
             :disabled="isCreatingVariation"
-            class="flex-1 px-3 py-1.5 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 rounded text-xs flex items-center justify-center gap-1"
+            class="flex-1 px-2 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-1 transition-all disabled:opacity-30"
             title="Create a new project variation from this snapshot"
           >
-            <span class="material-symbols-outlined" style="font-size: 16px;">fork_right</span>
+            <span class="material-symbols-outlined" style="font-size: 14px;">fork_right</span>
             <span v-if="isCreatingVariation">...</span>
             <span v-else>Fork</span>
           </button>
@@ -437,42 +440,50 @@ onMounted(() => {
     </div>
 
     <!-- Quick Actions (Collapsed) -->
-    <div v-if="structuredPrompt && !isSending" class="px-3 pb-2 border-t border-gray-700 pt-2">
-      <div class="text-xs text-gray-400 mb-2">Quick Actions:</div>
-      <div class="flex gap-2">
+    <div v-if="structuredPrompt && !isSending" class="px-4 pb-2 pt-2">
+      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button 
           @click="useSuggestion('Include a bookshelf')"
-          class="flex-1 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
+          class="whitespace-nowrap px-3 py-1.5 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 rounded-full transition-colors"
         >
-          Include a bookshelf
+          + Bookshelf
         </button>
         <button 
           @click="useSuggestion('Make the room follow a blue colour-scheme tastefully')"
-          class="flex-1 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded"
+          class="whitespace-nowrap px-3 py-1.5 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 rounded-full transition-colors"
         >
-          Blue colour scheme
+          + Blue Theme
+        </button>
+        <button 
+          @click="useSuggestion('Add more natural lighting')"
+          class="whitespace-nowrap px-3 py-1.5 text-[10px] font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 rounded-full transition-colors"
+        >
+          + Lighting
         </button>
       </div>
     </div>
 
     <!-- Chat Input -->
-    <div class="p-3 border-t border-gray-700">
-      <textarea 
-        v-model="chatInput"
-        @keypress="handleKeyPress"
-        :disabled="!structuredPrompt || isSending"
-        :placeholder="!structuredPrompt ? 'Generate a scene first' : 'Describe what you want to change...'"
-        class="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded resize-none disabled:bg-gray-800 disabled:text-gray-600"
-        rows="2"
-      ></textarea>
-      <button 
-        @click="sendMessage(chatInput)"
-        :disabled="!chatInput.trim() || !structuredPrompt || isSending"
-        class="w-full mt-2 px-3 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-2"
-      >
-        <div v-if="isSending" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-        {{ isSending ? 'Generating...' : 'Send (Enter)' }}
-      </button>
+    <div class="p-4 border-t border-gray-700 bg-gray-800">
+      <div class="relative">
+        <textarea 
+          v-model="chatInput"
+          @keypress="handleKeyPress"
+          :disabled="!structuredPrompt || isSending"
+          :placeholder="!structuredPrompt ? 'Generate a scene first' : 'Ask Copilot to change something...'"
+          class="w-full px-4 py-3 pr-12 text-sm bg-gray-700 text-gray-200 border border-gray-600 rounded-lg resize-none placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+          rows="1"
+          style="min-height: 46px;"
+        ></textarea>
+        <button 
+          @click="sendMessage(chatInput)"
+          :disabled="!chatInput.trim() || !structuredPrompt || isSending"
+          class="absolute right-2 top-2 bottom-2 px-3 text-blue-400 hover:text-blue-300 disabled:text-gray-500 transition-colors"
+        >
+          <div v-if="isSending" class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+          <span v-else class="material-symbols-outlined">send</span>
+        </button>
+      </div>
     </div>
 
     <!-- Preview Modal -->

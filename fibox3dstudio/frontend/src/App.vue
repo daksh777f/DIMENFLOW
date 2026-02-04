@@ -1,5 +1,6 @@
 <script setup>
 import { ref, provide, watch, onMounted, onUnmounted } from 'vue'
+import LandingPage from './components/LandingPage.vue'
 import IdeationTab from './components/IdeationTab.vue'
 import StudioTab from './components/StudioTab.vue'
 import RendersTab from './components/RendersTab.vue'
@@ -16,6 +17,9 @@ import { generateImage } from './api.js'
 import { prompts } from './prompts.js'
 
 const activeTab = ref('ideation')
+
+// Landing page state
+const showLandingPage = ref(!localStorage.getItem('hasVisitedBefore'))
 
 // Auth state
 const currentUser = ref(null)
@@ -214,6 +218,22 @@ const fetchUserQuota = async () => {
   }
 }
 
+// Landing page handlers
+const handleGetStarted = () => {
+  localStorage.setItem('hasVisitedBefore', 'true')
+  showLandingPage.value = false
+  // Show auth dialog if not authenticated
+  if (!currentUser.value) {
+    showAuthDialog.value = true
+  }
+}
+
+const handleSkipToApp = () => {
+  localStorage.setItem('hasVisitedBefore', 'true')
+  showLandingPage.value = false
+}
+
+
 // Auth state listener
 let unsubscribeAuth = null
 
@@ -233,94 +253,119 @@ onMounted(() => {
   })
 })
 
-onUnmounted(() => {
-  if (unsubscribeAuth) {
-    unsubscribeAuth()
-  }
-})
-</script>
 
-<template>
-  <div class="h-screen flex flex-col bg-gray-900 text-gray-100">
-    <!-- Auth Dialog -->
-    <AuthDialog 
-      :show="showAuthDialog && !isAuthLoading"
-      @continue-anonymous="handleContinueAnonymous"
-      @sign-in-google="handleSignInGoogle"
-    />
+    // Spotlight Effect Mouse Tracking
+    const handleMouseMove = (e) => {
+      const cards = document.getElementsByClassName('spotlight-card')
+      for (const card of cards) {
+        const rect = card.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        card.style.setProperty('--mouse-x', `${x}px`)
+        card.style.setProperty('--mouse-y', `${y}px`)
+      }
+    }
+    
+    onMounted(() => {
+      window.addEventListener('mousemove', handleMouseMove)
+    })
 
-    <!-- Loading State -->
-    <div v-if="isAuthLoading" class="h-full flex items-center justify-center">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div>
-        <div class="text-sm text-gray-400">Loading...</div>
-      </div>
-    </div>
+    onUnmounted(() => {
+      window.removeEventListener('mousemove', handleMouseMove)
+    })
+    </script>
+    
+    <template>
+      <!-- Landing Page -->
+      <LandingPage 
+        v-if="showLandingPage"
+        @get-started="handleGetStarted"
+        @skip-to-app="handleSkipToApp"
+      />
 
-    <!-- Main App (only show when authenticated) -->
-    <template v-else-if="currentUser">
-      <!-- Top Navigation Bar -->
-      <div class="flex items-center justify-between bg-gray-800 border-b border-gray-700 px-4 py-2">
-        <div class="flex items-center gap-6">
-          <h1 class="text-lg font-semibold" style="font-family: 'Syncopate', sans-serif; font-weight: 600;">DIMENFLOW</h1>
-          <div class="flex gap-1">
-            <button 
-              @click="activeTab = 'ideation'"
-              :class="[
-                'px-4 py-1.5 text-sm font-semibold rounded',
-                activeTab === 'ideation' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'text-gray-400 hover:text-gray-200'
-              ]"
-            >
-              Ideation
-            </button>
-            <button 
-              @click="activeTab = 'studio'"
-              :class="[
-                'px-4 py-1.5 text-sm font-semibold rounded',
-                activeTab === 'studio' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'text-gray-400 hover:text-gray-200'
-              ]"
-            >
-              3D Studio
-            </button>
-            <button 
-              @click="activeTab = 'renders'"
-              :class="[
-                'px-4 py-1.5 text-sm font-semibold rounded',
-                activeTab === 'renders' 
-                  ? 'bg-gray-700 text-white' 
-                  : 'text-gray-400 hover:text-gray-200'
-              ]"
-            >
-              Renders
-            </button>
+      <!-- Main App -->
+      <div v-else class="h-screen flex flex-col bg-gray-900 text-gray-100 overflow-hidden relative selection:bg-indigo-500 selection:text-white">
+        
+        <!-- Animated Background -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+          <div class="absolute inset-0 bg-grid opacity-20"></div>
+          <div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-900/20 to-transparent opacity-50 blur-3xl"></div>
+          <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-3xl"></div>
+        </div>
+    
+        <!-- Auth Dialog -->
+        <AuthDialog 
+          :show="showAuthDialog && !isAuthLoading"
+          @continue-anonymous="handleContinueAnonymous"
+          @sign-in-google="handleSignInGoogle"
+        />
+    
+        <!-- Loading State -->
+        <div v-if="isAuthLoading" class="h-full flex items-center justify-center relative z-10">
+          <div class="text-center">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+              <div class="absolute inset-0 border-4 border-indigo-500/30 rounded-full"></div>
+              <div class="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div class="text-sm text-gray-400 font-medium tracking-wider">INITIALIZING SYSTEM...</div>
           </div>
         </div>
-        
-        <ProjectBar />
-      </div>
-
-      <!-- Tab Content -->
-      <div class="flex-1 overflow-hidden">
-        <IdeationTab v-if="activeTab === 'ideation'" />
-        <StudioTab v-else-if="activeTab === 'studio'" />
-        <RendersTab v-else-if="activeTab === 'renders'" />
+    
+        <!-- Main App (only show when authenticated) -->
+        <template v-else-if="currentUser">
+          <!-- Top Navigation Bar (Solid) -->
+          <nav class="relative z-50 bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-8">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                  <span class="material-symbols-outlined text-white text-xl">view_in_ar</span>
+                </div>
+                <h1 class="text-xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" style="font-family: 'Syncopate', sans-serif; font-weight: 700;">DIMENFLOW</h1>
+              </div>
+              
+              <div class="flex bg-gray-800 rounded-lg p-1 border border-gray-700">
+                <button 
+                  v-for="tab in ['ideation', 'studio', 'renders']" 
+                  :key="tab"
+                  @click="activeTab = tab"
+                  :class="[
+                    'px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all duration-300 relative overflow-hidden',
+                    activeTab === tab 
+                      ? 'text-white shadow-lg' 
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                  ]"
+                >
+                  <div v-if="activeTab === tab" class="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-100"></div>
+                  <span class="relative z-10">{{ tab }}</span>
+                </button>
+              </div>
+            </div>
+            
+            <ProjectBar />
+          </nav>
+    
+          <!-- Tab Content with Transition -->
+          <div class="flex-1 overflow-hidden relative z-10">
+            <Transition 
+              enter-active-class="transition ease-out duration-300 transform" 
+              enter-from-class="opacity-0 scale-95" 
+              enter-to-class="opacity-100 scale-100" 
+              leave-active-class="transition ease-in duration-200 transform" 
+              leave-from-class="opacity-100 scale-100" 
+              leave-to-class="opacity-0 scale-95"
+              mode="out-in"
+            >
+              <KeepAlive>
+                <component 
+                  :is="activeTab === 'ideation' ? IdeationTab : activeTab === 'studio' ? StudioTab : RendersTab" 
+                />
+              </KeepAlive>
+            </Transition>
+          </div>
+        </template>
       </div>
     </template>
-  </div>
-</template>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-}
-</style>
+    
+    <style scoped>
+    /* Scoped styles overrides global where necessary */
+    </style>

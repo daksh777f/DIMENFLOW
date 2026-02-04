@@ -765,48 +765,51 @@ import BoundingBoxesDialog from './BoundingBoxesDialog.vue'
   <div class="h-full flex flex-col bg-gray-800">
     <!-- Full-screen overlay during Convert to 3D -->
     <Transition name="fade">
-      <div v-if="isConverting" class="fixed inset-0 z-[1000] bg-black bg-opacity-70 flex items-center justify-center">
-        <div class="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md text-center shadow-xl">
-          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto mb-3"></div>
-          <div class="text-sm font-semibold mb-2">Rendering individual furniture pieces...</div>
+      <div v-if="isConverting" class="fixed inset-0 z-[1000] bg-black bg-opacity-75 flex items-center justify-center">
+        <div class="bg-gray-900 p-6 rounded-lg shadow-xl text-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3"></div>
+          <p class="text-white font-semibold">Generating 3D Scene...</p>
         </div>
       </div>
     </Transition>
-    <div class="p-3 border-b border-gray-700">
-      <h2 class="text-sm font-semibold mb-3">Objects</h2>
-      <div class="flex gap-2">
+    <div class="p-4 border-b border-white/10">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">category</span>
+        Scene Objects
+      </h2>
+      <div class="flex gap-2 mb-2">
         <button 
           @click="handleAddObject"
           :disabled="!structuredPrompt"
-          class="flex-1 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-1"
+          class="flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-700 disabled:text-gray-500 rounded transition-colors flex items-center justify-center gap-1"
         >
-          <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span>
-          Add Object
+          <span class="material-symbols-outlined text-sm">add_circle</span>
+          Add
         </button>
         <button 
           @click="handleDelete"
           :disabled="selectedObjects.length === 0"
-          class="flex-1 px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-1"
+          class="flex-1 px-3 py-2 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-700 disabled:text-gray-500 rounded transition-colors flex items-center justify-center gap-1"
         >
-          <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+          <span class="material-symbols-outlined text-sm">delete</span>
           Delete
         </button>
       </div>
       <div class="flex gap-2 mt-2">
         <button 
           @click="triggerImportScene"
-          class="flex-1 px-3 py-1.5 text-xs font-semibold bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center gap-1"
+          class="flex-1 px-3 py-2 text-xs font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded transition-colors flex items-center justify-center gap-1.5"
         >
-          <span class="material-symbols-outlined" style="font-size: 16px;">upload_file</span>
-          Import Scene
+          <span class="material-symbols-outlined text-sm">upload_file</span>
+          Import
         </button>
         <button 
           @click="exportScene"
           :disabled="!structuredPrompt"
-          class="flex-1 px-3 py-1.5 text-xs font-semibold bg-gray-700 hover:bg-gray-600 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-1"
+          class="flex-1 px-3 py-2 text-xs font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-30 rounded transition-colors flex items-center justify-center gap-1.5"
         >
-          <span class="material-symbols-outlined" style="font-size: 16px;">download</span>
-          Export Scene
+          <span class="material-symbols-outlined text-sm">download</span>
+          Export
         </button>
         <input 
           ref="importFileInput"
@@ -819,19 +822,20 @@ import BoundingBoxesDialog from './BoundingBoxesDialog.vue'
       <button 
         @click="convertTo3D"
         :disabled="!structuredPrompt || isConverting"
-        class="w-full mt-2 px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-2"
+        class="w-full mt-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-700 disabled:text-gray-400 rounded transition-colors flex items-center justify-center gap-2"
       >
-        <span class="material-symbols-outlined" style="font-size: 16px;">view_in_ar</span>
+        <span class="material-symbols-outlined text-lg">view_in_ar</span>
         <div v-if="isConverting" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-        <span v-if="isConverting">{{ convertingStatus || 'Converting scene...' }}</span>
+        <span v-if="isConverting">{{ convertingStatus || 'Converting...' }}</span>
         <span v-else>Convert Scene to 3D</span>
       </button>
       <button 
+      <button 
         @click="generateFloorPlan"
         :disabled="!structuredPrompt || !currentImage || isGeneratingFloorPlan"
-        class="w-full mt-2 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 rounded flex items-center justify-center gap-2"
+        class="w-full mt-2 px-3 py-2 text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-gray-700 disabled:text-gray-400 rounded transition-colors flex items-center justify-center gap-2"
       >
-        <span v-if="!isGeneratingFloorPlan" class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
+        <span v-if="!isGeneratingFloorPlan" class="material-symbols-outlined text-lg">auto_awesome</span>
         <div v-if="isGeneratingFloorPlan" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
         {{ isGeneratingFloorPlan ? 'Generating...' : 'Generate Floor Plan' }}
       </button>
@@ -841,36 +845,36 @@ import BoundingBoxesDialog from './BoundingBoxesDialog.vue'
       <div v-if="!structuredPrompt" class="text-gray-500 text-xs text-center py-8">
         No objects yet
       </div>
-      <div v-else class="space-y-1.5">
+      <div v-else class="space-y-2">
         <div 
           v-for="(obj, idx) in structuredPrompt.objects" 
           :key="idx"
-          class="flex items-start gap-1.5 p-1.5 bg-gray-700 rounded hover:bg-gray-600"
+          class="flex items-start gap-2 p-3 rounded bg-gray-700 hover:bg-gray-600 transition-colors group relative"
         >
           <input 
             type="checkbox" 
             :value="idx"
             v-model="selectedObjects"
-            class="mt-0.5 cursor-pointer flex-shrink-0"
+            class="mt-1 cursor-pointer flex-shrink-0 accent-indigo-500"
           />
           <div class="flex-1 min-w-0">
-            <div class="text-xs font-semibold text-gray-300">Object {{ idx + 1 }}</div>
-            <div class="text-xs text-gray-400 line-clamp-3 mt-0.5 leading-tight">{{ obj.description }}</div>
+            <div class="text-xs font-bold text-indigo-300 group-hover:text-indigo-200 transition-colors">Object {{ idx + 1 }}</div>
+            <div class="text-xs text-gray-400 line-clamp-2 mt-0.5 leading-relaxed font-light">{{ obj.description }}</div>
           </div>
-          <div class="flex flex-col gap-1 flex-shrink-0">
+          <div class="flex flex-col gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
               @click="handleEdit(idx)"
-              class="p-1 text-xs bg-blue-600 hover:bg-blue-700 rounded flex items-center justify-center"
+              class="p-1 text-xs text-blue-300 hover:bg-blue-500/20 rounded flex items-center justify-center transition-colors"
               title="Edit object"
             >
-              <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+              <span class="material-symbols-outlined" style="font-size: 14px;">edit</span>
             </button>
             <button 
               @click="deleteObject(idx)"
-              class="p-1 text-xs bg-red-600 hover:bg-red-700 rounded flex items-center justify-center"
+              class="p-1 text-xs text-red-300 hover:bg-red-500/20 rounded flex items-center justify-center transition-colors"
               title="Delete object"
             >
-              <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+              <span class="material-symbols-outlined" style="font-size: 14px;">delete</span>
             </button>
           </div>
         </div>
