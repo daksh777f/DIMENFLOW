@@ -38,3 +38,21 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+# Secrets
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Node
+.next/
+out/
+.vercel/
+
+# Python
+.ipynb_checkpoints/
+.pytest_cache/
