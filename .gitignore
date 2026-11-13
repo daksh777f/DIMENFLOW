@@ -56,3 +56,4 @@ out/
 # Python
 .ipynb_checkpoints/
 .pytest_cache/
+fibox3dstudio/frontend/public/babylon/*.map
